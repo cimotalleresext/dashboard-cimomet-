@@ -6,10 +6,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;padding:16px}
-h1{font-size:16px;font-weight:500;margin-bottom:2px}
-.sub{font-size:12px;color:#888;margin-bottom:16px}
-.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
-.config-btn{width:34px;height:34px;border:0.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+h1{font-size:18px;font-weight:500;letter-spacing:0.5px}
+.topbar{display:flex;justify-content:center;align-items:center;margin-bottom:16px;position:relative}
+.topbar-right{position:absolute;right:0;display:flex;align-items:center;gap:12px}
+.cimomet{font-size:13px;font-weight:500;color:#444}
+.config-btn{width:34px;height:34px;border:0.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .config-btn:hover{background:#f0f0ee}
 .config-btn svg{width:16px;height:16px;stroke:#666;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .config-panel{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none}
@@ -17,15 +18,11 @@ h1{font-size:16px;font-weight:500;margin-bottom:2px}
 .config-panel h2{font-size:13px;font-weight:500;margin-bottom:10px;color:#444}
 .sources{display:flex;flex-direction:column;gap:8px}
 .source-row{display:flex;align-items:center;gap:8px}
-.source-row input{flex:1;padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;background:#fff;color:#1a1a1a}
-.source-row .del{padding:4px 8px;border:0.5px solid #eee;border-radius:6px;background:none;font-size:12px;color:#aaa;cursor:pointer}
-.source-row .del:hover{background:#fce8e8;color:#c0392b}
-.add-btn{padding:6px 12px;border:0.5px solid #bbb;border-radius:8px;background:none;font-size:12px;cursor:pointer;color:#555;margin-top:4px}
+.source-row span{font-size:12px;font-weight:500;min-width:80px}
+.source-row input{flex:1;padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;background:#fff;color:#888}
 .toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
 button.primary{padding:7px 16px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;font-size:13px;cursor:pointer}
 button.primary:hover{background:#333}
-button.sec{padding:7px 14px;border:0.5px solid #bbb;border-radius:8px;background:#fff;font-size:13px;cursor:pointer}
-button.sec:hover{background:#f0f0ee}
 .status{font-size:12px;color:#888}
 .resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
 .card{background:#fff;border-radius:8px;padding:12px 14px;border:0.5px solid #ddd}
@@ -53,19 +50,18 @@ tr:hover td{background:#fafaf8}
 <body>
 
 <div class="topbar">
-  <div style="flex:1;text-align:center">
-    <h1 style="font-size:18px;letter-spacing:0.5px">AVANCES TALLERES EXTERNOS</h1>
+  <h1>AVANCES TALLERES EXTERNOS</h1>
+  <div class="topbar-right">
+    <span class="cimomet">CIMOMET S.A.</span>
+    <button class="config-btn" onclick="toggleConfig()" title="Configuración">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </div>
-  <div style="position:absolute;right:52px;top:16px;font-size:13px;font-weight:500;color:#444">CIMOMET S.A.</div>
-  <button class="config-btn" onclick="toggleConfig()" title="Configuración">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
 </div>
 
 <div class="config-panel" id="sec-config">
-  <h2>Fuentes de datos (Apps Script URLs)</h2>
+  <h2>Fuentes de datos</h2>
   <div class="sources" id="sourcesList"></div>
-  <button class="add-btn" onclick="addSource()">+ Agregar taller</button>
   <div class="toolbar">
     <button class="primary" onclick="cargarTodo()">Cargar / actualizar datos</button>
     <span class="status" id="statusMsg"></span>
@@ -73,10 +69,9 @@ tr:hover td{background:#fafaf8}
 </div>
 
 <div class="resumen" id="resumen" style="display:none"></div>
-<div id="tablaContainer"><p class="empty">Abrí la configuración (⚙️ arriba a la derecha), agregá las URLs y hacé clic en "Cargar / actualizar datos".</p></div>
+<div id="tablaContainer"><p class="empty">Cargando datos...</p></div>
 
 <script>
-const STORAGE_KEY = 'cimomet_sources_v2';
 let sources = [];
 let datosGlobales = [];
 
@@ -87,33 +82,16 @@ async function init() {
   } catch(e) {
     sources = [];
   }
-  if (sources.some(s => s.url)) cargarTodo();
+  renderSources();
+  if (sources.length > 0) cargarTodo();
 }
 
 function renderSources() {
-  document.getElementById('sourcesList').innerHTML = sources.map((s,i) => `
+  document.getElementById('sourcesList').innerHTML = sources.map(s => `
     <div class="source-row">
-      <span style="font-size:12px;font-weight:500;min-width:80px">${s.nombre||'Sin nombre'}</span>
-      <input type="text" value="${s.url||''}" readonly style="color:#888">
+      <span>${s.nombre || 'Sin nombre'}</span>
+      <input type="text" value="${s.url || ''}" readonly>
     </div>`).join('');
-}
-
-function updateSource(i, val) {
-  sources[i].url = val.trim();
-  saveSources();
-}
-
-function addSource() {
-  sources.push({url:''});
-  saveSources();
-  renderSources();
-}
-
-function removeSource(i) {
-  sources.splice(i,1);
-  if (!sources.length) sources.push({url:''});
-  saveSources();
-  renderSources();
 }
 
 function toggleConfig() {
@@ -128,8 +106,7 @@ function setStatus(msg, type) {
 
 function parseSheet(rows, sheetName) {
   const taller = rows.length > 1 && rows[1] && rows[1][0] ? String(rows[1][0]).trim() : sheetName;
-  const titulo  = rows[0] && rows[0][0] ? String(rows[0][0]).trim() : sheetName;
-  const paquete = titulo;
+  const paquete = rows[0] && rows[0][0] ? String(rows[0][0]).trim() : sheetName;
 
   let headerIdx = -1;
   for (let i = 0; i < Math.min(12, rows.length); i++) {
@@ -187,22 +164,19 @@ function formatFecha(raw) {
 }
 
 async function cargarTodo() {
-  const activas = sources.filter(s => s.url);
-  if (!activas.length) { setStatus('Agregá al menos una URL','error'); return; }
-  saveSources();
+  if (!sources.length) { setStatus('Sin fuentes configuradas','error'); return; }
   setStatus('Cargando...','');
   document.getElementById('tablaContainer').innerHTML = '<p class="empty">Cargando...</p>';
   document.getElementById('resumen').style.display = 'none';
   datosGlobales = [];
 
-  const TIMEOUT_MS = 15000;
   const fetchConTimeout = url => Promise.race([
     fetch(url).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), TIMEOUT_MS))
+    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), 15000))
   ]);
 
   let errores = 0;
-  await Promise.all(activas.map(src =>
+  await Promise.all(sources.map(src =>
     fetchConTimeout(src.url)
       .then(sheets => {
         for (const sh of sheets) {
@@ -252,9 +226,7 @@ function renderTabla() {
     const pfF = pF>=100?'pf-ok':pF>0?'pf-par':'pf-no';
     const pfL = pL>=100?'pf-ok':pL>0?'pf-par':'pf-no';
     const kgStr = d.totalKg>0?Math.round(d.totalKg).toLocaleString('es-AR')+' kg':'<span style="color:#ccc">—</span>';
-    const fechaHTML = d.lastModified
-      ? `<span class="fecha-ok">${d.lastModified}</span>`
-      : `<span class="fecha-vacia">—</span>`;
+    const fechaHTML = d.lastModified ? `<span class="fecha-ok">${d.lastModified}</span>` : `<span class="fecha-vacia">—</span>`;
     rows += `<tr>
       <td style="font-weight:500">${d.taller}</td>
       <td>${d.paquete}</td>
