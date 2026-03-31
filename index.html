@@ -6,8 +6,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;padding:16px}
-h1{font-size:18px;font-weight:500;letter-spacing:0.5px}
 .topbar{display:flex;justify-content:center;align-items:center;margin-bottom:16px;position:relative}
+.topbar h1{font-size:18px;font-weight:500;letter-spacing:0.5px}
 .topbar-right{position:absolute;right:0;display:flex;align-items:center;gap:12px}
 .cimomet{font-size:13px;font-weight:500;color:#444}
 .config-btn{width:34px;height:34px;border:0.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -45,6 +45,7 @@ tr:hover td{background:#fafaf8}
 .progress-fill{height:100%;border-radius:3px}
 .pf-ok{background:#639922}.pf-par{background:#EF9F27}.pf-no{background:#ddd}
 .empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+.row-inactiva td{opacity:0.35}
 </style>
 </head>
 <body>
@@ -188,7 +189,8 @@ async function cargarTodo() {
             totalKg: parsed.totalKg,
             totalFabKg: parsed.totalFabKg,
             totalLibKg: parsed.totalLibKg,
-            lastModified: formatFecha(sh.lastModified)
+            lastModified: formatFecha(sh.lastModified),
+            activo: true
           });
         }
       })
@@ -204,32 +206,44 @@ async function cargarTodo() {
   renderTabla();
 }
 
+function toggleActivo(idx, val) {
+  datosGlobales[idx].activo = val;
+  renderTabla();
+}
+
 function renderTabla() {
-  let totCant=0,totKg=0,totFab=0,totLib=0;
-  for (const d of activos){ totCant+=d.totalCant; totKg+=d.totalKg; totFab+=d.totalFabKg; totLib+=d.totalLibKg; }
-  const pFabT = totKg>0?totFab/totKg*100:0;
-  const pLibT = totKg>0?totLib/totKg*100:0;
+  const activos = datosGlobales.filter(d => d.activo);
+  let totCant=0, totKg=0, totFab=0, totLib=0;
+  for (const d of activos) {
+    totCant += d.totalCant;
+    totKg   += d.totalKg;
+    totFab  += d.totalFabKg;
+    totLib  += d.totalLibKg;
+  }
+  const pFabT = totKg>0 ? totFab/totKg*100 : 0;
+  const pLibT = totKg>0 ? totLib/totKg*100 : 0;
 
   document.getElementById('resumen').style.display = 'grid';
   document.getElementById('resumen').innerHTML = `
-    <div class="card"><div class="card-label">Paquetes activos</div><div class="card-value">${datosGlobales.length}</div></div>
+    <div class="card"><div class="card-label">Paquetes activos</div><div class="card-value">${activos.length}</div></div>
     <div class="card"><div class="card-label">Total kg</div><div class="card-value">${Math.round(totKg).toLocaleString('es-AR')}</div><div class="card-sub">${Math.round(totCant)} piezas</div></div>
     <div class="card"><div class="card-label">Fabricado</div><div class="card-value">${pFabT.toFixed(1)}%</div><div class="card-sub">${Math.round(totFab).toLocaleString('es-AR')} kg</div></div>
     <div class="card"><div class="card-label">Liberado calidad</div><div class="card-value">${pLibT.toFixed(1)}%</div><div class="card-sub">${Math.round(totLib).toLocaleString('es-AR')} kg</div></div>`;
 
   let rows = '';
-  for (const [idx, d] of datosGlobales.entries()) {
-    const checked = d.activo !== false ? 'checked' : '';
-    const pF = d.totalKg>0?d.totalFabKg/d.totalKg*100:0;
-    const pL = d.totalKg>0?d.totalLibKg/d.totalKg*100:0;
+  for (let i = 0; i < datosGlobales.length; i++) {
+    const d = datosGlobales[i];
+    const pF = d.totalKg>0 ? d.totalFabKg/d.totalKg*100 : 0;
+    const pL = d.totalKg>0 ? d.totalLibKg/d.totalKg*100 : 0;
     const bF = pF>=100?'b-ok':pF>0?'b-par':'b-no';
     const bL = pL>=100?'b-ok':pL>0?'b-par':'b-no';
     const pfF = pF>=100?'pf-ok':pF>0?'pf-par':'pf-no';
     const pfL = pL>=100?'pf-ok':pL>0?'pf-par':'pf-no';
-    const kgStr = d.totalKg>0?Math.round(d.totalKg).toLocaleString('es-AR')+' kg':'<span style="color:#ccc">—</span>';
+    const kgStr = d.totalKg>0 ? Math.round(d.totalKg).toLocaleString('es-AR')+' kg' : '<span style="color:#ccc">—</span>';
     const fechaHTML = d.lastModified ? `<span class="fecha-ok">${d.lastModified}</span>` : `<span class="fecha-vacia">—</span>`;
-    rows += `<tr style="${d.activo===false?'opacity:0.4':''}">
-      <td><input type="checkbox" ${checked} onchange="toggleActivo(${idx},this.checked)" style="cursor:pointer;width:15px;height:15px"></td>
+    const rowClass = d.activo ? '' : 'row-inactiva';
+    rows += `<tr class="${rowClass}">
+      <td style="text-align:center"><input type="checkbox" ${d.activo?'checked':''} onchange="toggleActivo(${i},this.checked)" style="cursor:pointer;width:15px;height:15px"></td>
       <td style="font-weight:500">${d.taller}</td>
       <td>${d.paquete}</td>
       <td style="text-align:center">${Math.round(d.totalCant)}</td>
@@ -257,9 +271,9 @@ function renderTabla() {
       <thead><tr>
         <th style="width:4%"></th>
         <th style="width:10%">Taller</th>
-        <th style="width:22%">Paquete</th>
-        <th style="width:7%;text-align:center">Piezas</th>
-        <th style="width:10%;text-align:right">Kg total</th>
+        <th style="width:20%">Paquete</th>
+        <th style="width:6%;text-align:center">Piezas</th>
+        <th style="width:9%;text-align:right">Kg total</th>
         <th style="width:21%">Fabricado</th>
         <th style="width:21%">Liberado</th>
         <th style="width:9%">Actualizado</th>
