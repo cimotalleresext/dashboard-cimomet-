@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Avance Talleres Externos — Cimomet</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;font-size:14px;color:#1a1a1a;background:#f5f5f3;padding:16px}
+h1{font-size:16px;font-weight:500;margin-bottom:2px}
+.sub{font-size:12px;color:#888;margin-bottom:16px}
+.topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.config-btn{width:34px;height:34px;border:0.5px solid #ddd;border-radius:8px;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.config-btn:hover{background:#f0f0ee}
+.config-btn svg{width:16px;height:16px;stroke:#666;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.config-panel{background:#fff;border:0.5px solid #ddd;border-radius:12px;padding:14px 16px;margin-bottom:14px;display:none}
+.config-panel.open{display:block}
+.config-panel h2{font-size:13px;font-weight:500;margin-bottom:10px;color:#444}
+.sources{display:flex;flex-direction:column;gap:8px}
+.source-row{display:flex;align-items:center;gap:8px}
+.source-row input{flex:1;padding:6px 10px;border:0.5px solid #ccc;border-radius:8px;font-size:12px;background:#fff;color:#1a1a1a}
+.source-row .del{padding:4px 8px;border:0.5px solid #eee;border-radius:6px;background:none;font-size:12px;color:#aaa;cursor:pointer}
+.source-row .del:hover{background:#fce8e8;color:#c0392b}
+.add-btn{padding:6px 12px;border:0.5px solid #bbb;border-radius:8px;background:none;font-size:12px;cursor:pointer;color:#555;margin-top:4px}
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+button.primary{padding:7px 16px;border:none;border-radius:8px;background:#1a1a1a;color:#fff;font-size:13px;cursor:pointer}
+button.primary:hover{background:#333}
+button.sec{padding:7px 14px;border:0.5px solid #bbb;border-radius:8px;background:#fff;font-size:13px;cursor:pointer}
+button.sec:hover{background:#f0f0ee}
+.status{font-size:12px;color:#888}
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.card{background:#fff;border-radius:8px;padding:12px 14px;border:0.5px solid #ddd}
+.card-label{font-size:11px;color:#888;margin-bottom:4px}
+.card-value{font-size:20px;font-weight:500}
+.card-sub{font-size:11px;color:#aaa;margin-top:2px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;border:0.5px solid #ddd;font-size:13px}
+thead tr{background:#f0f0ee}
+th{padding:9px 10px;text-align:left;font-weight:500;color:#444;border-bottom:0.5px solid #ddd;font-size:12px;white-space:nowrap}
+td{padding:7px 10px;border-bottom:0.5px solid #eee;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafaf8}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap}
+.b-ok{background:#eaf3de;color:#3B6D11}
+.b-par{background:#FAEEDA;color:#854F0B}
+.b-no{background:#f1efe8;color:#5F5E5A}
+.fecha-ok{color:#3B6D11;font-size:12px;font-weight:500}
+.fecha-vacia{color:#ccc;font-size:12px}
+.progress-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:3px;min-width:60px}
+.progress-fill{height:100%;border-radius:3px}
+.pf-ok{background:#639922}.pf-par{background:#EF9F27}.pf-no{background:#ddd}
+.empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="flex:1;text-align:center">
+    <h1 style="font-size:18px;letter-spacing:0.5px">AVANCES TALLERES EXTERNOS</h1>
+  </div>
+  <div style="position:absolute;right:52px;top:16px;font-size:13px;font-weight:500;color:#444">CIMOMET S.A.</div>
+  <button class="config-btn" onclick="toggleConfig()" title="Configuración">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+</div>
+
+<div class="config-panel" id="sec-config">
+  <h2>Fuentes de datos (Apps Script URLs)</h2>
+  <div class="sources" id="sourcesList"></div>
+  <button class="add-btn" onclick="addSource()">+ Agregar taller</button>
+  <div class="toolbar">
+    <button class="primary" onclick="cargarTodo()">Cargar / actualizar datos</button>
+    <span class="status" id="statusMsg"></span>
+  </div>
+</div>
+
+<div class="resumen" id="resumen" style="display:none"></div>
+<div id="tablaContainer"><p class="empty">Abrí la configuración (⚙️ arriba a la derecha), agregá las URLs y hacé clic en "Cargar / actualizar datos".</p></div>
+
+<script>
+const STORAGE_KEY = 'cimomet_sources_v2';
+let sources = [];
+let datosGlobales = [];
+
+function loadSources() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) sources = JSON.parse(s); } catch(e){}
+  if (!sources.length) sources = [{url:''}];
+  renderSources();
+}
+
+function saveSources() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sources)); } catch(e){}
+}
+
+function renderSources() {
+  document.getElementById('sourcesList').innerHTML = sources.map((s,i) => `
+    <div class="source-row">
+      <input type="text" placeholder="https://script.google.com/macros/s/..." value="${s.url||''}" onchange="updateSource(${i},this.value)">
+      <button class="del" onclick="removeSource(${i})">✕</button>
+    </div>`).join('');
+}
+
+function updateSource(i, val) {
+  sources[i].url = val.trim();
+  saveSources();
+}
+
+function addSource() {
+  sources.push({url:''});
+  saveSources();
+  renderSources();
+}
+
+function removeSource(i) {
+  sources.splice(i,1);
+  if (!sources.length) sources.push({url:''});
+  saveSources();
+  renderSources();
+}
+
+function toggleConfig() {
+  document.getElementById('sec-config').classList.toggle('open');
+}
+
+function setStatus(msg, type) {
+  const el = document.getElementById('statusMsg');
+  el.textContent = msg;
+  el.style.color = type==='error'?'#c0392b':type==='ok'?'#3B6D11':'#888';
+}
+
+function parseSheet(rows, sheetName) {
+  const taller = rows.length > 1 && rows[1] && rows[1][0] ? String(rows[1][0]).trim() : sheetName;
+  const titulo  = rows[0] && rows[0][0] ? String(rows[0][0]).trim() : sheetName;
+  const paquete = titulo;
+
+  let headerIdx = -1;
+  for (let i = 0; i < Math.min(12, rows.length); i++) {
+    if (rows[i].some(c => String(c).toUpperCase().includes('POSIC'))) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) return null;
+
+  const headers = rows[headerIdx].map(c => String(c).toUpperCase().trim());
+  const iPos  = headers.findIndex(h => h.includes('POSIC'));
+  const iCant = headers.findIndex(h => h.includes('CANT'));
+  const iKgU  = headers.findIndex(h => h.includes('KG'));
+  const avIdxs = headers.map((h,i) => h.includes('AVANCE') ? i : -1).filter(i => i >= 0);
+  const iAvArm = avIdxs[0] ?? -1;
+  const iAvSol = avIdxs[1] ?? -1;
+  let iAPCal = headers.findIndex(h => h.includes('AP') && h.includes('CALIDAD'));
+  if (iAPCal === -1) {
+    let cnt = 0;
+    for (let i = 0; i < headers.length; i++) {
+      if (headers[i].includes('CALIDAD')) { cnt++; if (cnt===2) { iAPCal=i; break; } }
+    }
+  }
+
+  let totalCant=0, totalKg=0, totalFabKg=0, totalLibKg=0;
+  for (let i = headerIdx+1; i < rows.length; i++) {
+    const r = rows[i];
+    const pos = String(r[iPos]??'').trim();
+    if (!pos) continue;
+    const cant  = parseFloat(r[iCant])  || 0;
+    if (cant <= 0) continue;
+    const kgU   = iKgU  >= 0 ? parseFloat(r[iKgU])  || 0 : 0;
+    const avArm = iAvArm >= 0 ? parseFloat(r[iAvArm]) || 0 : 0;
+    const avSol = iAvSol >= 0 ? parseFloat(r[iAvSol]) || 0 : 0;
+    const apCal = iAPCal >= 0 ? parseFloat(r[iAPCal]) || 0 : 0;
+    const kgTotal = cant * kgU;
+    const pctFab  = Math.min((avArm/cant)*0.5 + (avSol/cant)*0.5, 1);
+    totalCant   += cant;
+    totalKg     += kgTotal;
+    totalFabKg  += kgTotal * pctFab;
+    totalLibKg  += (Math.min(apCal, cant) / cant) * kgTotal;
+  }
+
+  if (totalCant === 0) return null;
+  return { taller, paquete, totalCant, totalKg, totalFabKg, totalLibKg };
+}
+
+function formatFecha(raw) {
+  if (!raw) return null;
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) return raw;
+  try {
+    const d = new Date(raw);
+    if (isNaN(d)) return raw;
+    return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
+           d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  } catch(e){ return raw; }
+}
+
+async function cargarTodo() {
+  const activas = sources.filter(s => s.url);
+  if (!activas.length) { setStatus('Agregá al menos una URL','error'); return; }
+  saveSources();
+  setStatus('Cargando...','');
+  document.getElementById('tablaContainer').innerHTML = '<p class="empty">Cargando...</p>';
+  document.getElementById('resumen').style.display = 'none';
+  datosGlobales = [];
+
+  const TIMEOUT_MS = 15000;
+  const fetchConTimeout = url => Promise.race([
+    fetch(url).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
+    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), TIMEOUT_MS))
+  ]);
+
+  let errores = 0;
+  await Promise.all(activas.map(src =>
+    fetchConTimeout(src.url)
+      .then(sheets => {
+        for (const sh of sheets) {
+          const parsed = parseSheet(sh.data, sh.name);
+          if (parsed) datosGlobales.push({
+            taller: parsed.taller,
+            paquete: parsed.paquete,
+            totalCant: parsed.totalCant,
+            totalKg: parsed.totalKg,
+            totalFabKg: parsed.totalFabKg,
+            totalLibKg: parsed.totalLibKg,
+            lastModified: formatFecha(sh.lastModified)
+          });
+        }
+      })
+      .catch(() => errores++)
+  ));
+
+  if (!datosGlobales.length) {
+    setStatus('No se pudieron cargar datos','error');
+    document.getElementById('tablaContainer').innerHTML = '<p class="empty">Sin datos. Verificá las URLs.</p>';
+    return;
+  }
+  setStatus(`${datosGlobales.length} paquetes cargados${errores?' ('+errores+' fuente/s con error)':''}`, errores?'':'ok');
+  renderTabla();
+}
+
+function renderTabla() {
+  let totCant=0,totKg=0,totFab=0,totLib=0;
+  for (const d of datosGlobales){ totCant+=d.totalCant; totKg+=d.totalKg; totFab+=d.totalFabKg; totLib+=d.totalLibKg; }
+  const pFabT = totKg>0?totFab/totKg*100:0;
+  const pLibT = totKg>0?totLib/totKg*100:0;
+
+  document.getElementById('resumen').style.display = 'grid';
+  document.getElementById('resumen').innerHTML = `
+    <div class="card"><div class="card-label">Paquetes activos</div><div class="card-value">${datosGlobales.length}</div></div>
+    <div class="card"><div class="card-label">Total kg</div><div class="card-value">${Math.round(totKg).toLocaleString('es-AR')}</div><div class="card-sub">${Math.round(totCant)} piezas</div></div>
+    <div class="card"><div class="card-label">Fabricado</div><div class="card-value">${pFabT.toFixed(1)}%</div><div class="card-sub">${Math.round(totFab).toLocaleString('es-AR')} kg</div></div>
+    <div class="card"><div class="card-label">Liberado calidad</div><div class="card-value">${pLibT.toFixed(1)}%</div><div class="card-sub">${Math.round(totLib).toLocaleString('es-AR')} kg</div></div>`;
+
+  let rows = '';
+  for (const d of datosGlobales) {
+    const pF = d.totalKg>0?d.totalFabKg/d.totalKg*100:0;
+    const pL = d.totalKg>0?d.totalLibKg/d.totalKg*100:0;
+    const bF = pF>=100?'b-ok':pF>0?'b-par':'b-no';
+    const bL = pL>=100?'b-ok':pL>0?'b-par':'b-no';
+    const pfF = pF>=100?'pf-ok':pF>0?'pf-par':'pf-no';
+    const pfL = pL>=100?'pf-ok':pL>0?'pf-par':'pf-no';
+    const kgStr = d.totalKg>0?Math.round(d.totalKg).toLocaleString('es-AR')+' kg':'<span style="color:#ccc">—</span>';
+    const fechaHTML = d.lastModified
+      ? `<span class="fecha-ok">${d.lastModified}</span>`
+      : `<span class="fecha-vacia">—</span>`;
+    rows += `<tr>
+      <td style="font-weight:500">${d.taller}</td>
+      <td>${d.paquete}</td>
+      <td style="text-align:center">${Math.round(d.totalCant)}</td>
+      <td style="text-align:right">${kgStr}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1"><div class="progress-bar"><div class="progress-fill ${pfF}" style="width:${Math.min(pF,100).toFixed(1)}%"></div></div></div>
+          <span class="badge ${bF}" style="min-width:46px;text-align:center">${pF.toFixed(1)}%</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${Math.round(d.totalFabKg).toLocaleString('es-AR')} kg</div>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="flex:1"><div class="progress-bar"><div class="progress-fill ${pfL}" style="width:${Math.min(pL,100).toFixed(1)}%"></div></div></div>
+          <span class="badge ${bL}" style="min-width:46px;text-align:center">${pL.toFixed(1)}%</span>
+        </div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${Math.round(d.totalLibKg).toLocaleString('es-AR')} kg</div>
+      </td>
+      <td>${fechaHTML}</td>
+    </tr>`;
+  }
+
+  document.getElementById('tablaContainer').innerHTML = `
+    <table>
+      <thead><tr>
+        <th style="width:10%">Taller</th>
+        <th style="width:22%">Paquete</th>
+        <th style="width:7%;text-align:center">Piezas</th>
+        <th style="width:10%;text-align:right">Kg total</th>
+        <th style="width:21%">Fabricado</th>
+        <th style="width:21%">Liberado</th>
+        <th style="width:9%">Actualizado</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+loadSources();
+if (sources.some(s => s.url)) cargarTodo();
+</script>
+</body>
+</html>
