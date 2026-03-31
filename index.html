@@ -82,7 +82,7 @@ let datosGlobales = [];
 
 async function init() {
   try {
-    const res = await fetch('https://cimotalleresext.github.io/dashboard-cimomet-/fuentes.json');
+    const res = await fetch('fuentes.json');
     sources = await res.json();
   } catch(e) {
     sources = [];
