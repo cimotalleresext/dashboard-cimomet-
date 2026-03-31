@@ -80,21 +80,21 @@ const STORAGE_KEY = 'cimomet_sources_v2';
 let sources = [];
 let datosGlobales = [];
 
-function loadSources() {
-  try { const s = localStorage.getItem(STORAGE_KEY); if (s) sources = JSON.parse(s); } catch(e){}
-  if (!sources.length) sources = [{url:''}];
-  renderSources();
-}
-
-function saveSources() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(sources)); } catch(e){}
+async function init() {
+  try {
+    const res = await fetch('fuentes.json');
+    sources = await res.json();
+  } catch(e) {
+    sources = [];
+  }
+  if (sources.some(s => s.url)) cargarTodo();
 }
 
 function renderSources() {
   document.getElementById('sourcesList').innerHTML = sources.map((s,i) => `
     <div class="source-row">
-      <input type="text" placeholder="https://script.google.com/macros/s/..." value="${s.url||''}" onchange="updateSource(${i},this.value)">
-      <button class="del" onclick="removeSource(${i})">✕</button>
+      <span style="font-size:12px;font-weight:500;min-width:80px">${s.nombre||'Sin nombre'}</span>
+      <input type="text" value="${s.url||''}" readonly style="color:#888">
     </div>`).join('');
 }
 
