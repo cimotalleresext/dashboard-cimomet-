@@ -39,6 +39,7 @@ tr:hover td{background:#fafaf8}
 .b-ok{background:#eaf3de;color:#3B6D11}
 .b-par{background:#FAEEDA;color:#854F0B}
 .b-no{background:#f1efe8;color:#5F5E5A}
+.b-cerrado{background:#e8e8e8;color:#666}
 .fecha-ok{color:#3B6D11;font-size:12px;font-weight:500}
 .fecha-vacia{color:#ccc;font-size:12px}
 .progress-bar{height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-top:3px;min-width:60px}
@@ -46,6 +47,22 @@ tr:hover td{background:#fafaf8}
 .pf-ok{background:#639922}.pf-par{background:#EF9F27}.pf-no{background:#ddd}
 .empty{text-align:center;padding:40px;color:#aaa;font-size:13px}
 .row-inactiva td{opacity:0.35}
+.btn-cerrar{padding:3px 10px;border:0.5px solid #f5c6c6;border-radius:6px;background:#fff5f5;color:#c0392b;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-cerrar:hover{background:#fce8e8}
+.btn-reabrir{padding:3px 10px;border:0.5px solid #c6e2c6;border-radius:6px;background:#f5fff5;color:#27ae60;font-size:11px;cursor:pointer;white-space:nowrap}
+.btn-reabrir:hover{background:#e8f8e8}
+.sec-cerrados{margin-top:24px}
+.sec-cerrados h2{font-size:14px;font-weight:500;color:#888;margin-bottom:10px;padding-bottom:6px;border-bottom:0.5px solid #ddd}
+.modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:#fff;border-radius:12px;padding:24px;max-width:340px;width:90%;text-align:center}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:8px}
+.modal p{font-size:13px;color:#666;margin-bottom:20px;line-height:1.5}
+.modal-btns{display:flex;gap:8px;justify-content:center}
+.modal-btns button{padding:8px 20px;border-radius:8px;font-size:13px;cursor:pointer}
+.btn-confirmar{border:none;background:#c0392b;color:#fff}
+.btn-confirmar:hover{background:#a93226}
+.btn-cancelar{border:0.5px solid #bbb;background:#fff;color:#555}
+.btn-cancelar:hover{background:#f0f0ee}
 </style>
 </head>
 <body>
@@ -71,27 +88,74 @@ tr:hover td{background:#fafaf8}
 
 <div class="resumen" id="resumen" style="display:none"></div>
 <div id="tablaContainer"><p class="empty">Cargando datos...</p></div>
+<div class="sec-cerrados" id="sec-cerrados" style="display:none">
+  <h2>Paquetes cerrados</h2>
+  <div id="tablaCerrados"></div>
+</div>
+
+<div id="modalContainer"></div>
 
 <script>
+const GITHUB_TOKEN = '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';
+const GITHUB_REPO = 'cimotalleresext/dashboard-cimomet-';
+const CERRADOS_FILE = 'cerrados.json';
+
 let sources = [];
 let datosGlobales = [];
+let cerrados = [];
+let cerradosSHA = null;
 
 async function init() {
   try {
     const res = await fetch('fuentes.json');
     sources = await res.json();
-  } catch(e) {
-    sources = [];
-  }
+  } catch(e) { sources = []; }
   renderSources();
+  await cargarCerrados();
   if (sources.length > 0) cargarTodo();
+  setInterval(cargarTodo, 5 * 60 * 1000);
+}
+
+async function cargarCerrados() {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
+      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      cerradosSHA = data.sha;
+      cerrados = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    } else if (res.status === 404) {
+      cerrados = [];
+      cerradosSHA = null;
+    }
+  } catch(e) { cerrados = []; }
+}
+
+async function guardarCerrados() {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(cerrados, null, 2))));
+  const body = { message: 'Actualizar cerrados.json', content };
+  if (cerradosSHA) body.sha = cerradosSHA;
+  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `token ${GITHUB_TOKEN}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
+  });
+  if (res.ok) {
+    const data = await res.json();
+    cerradosSHA = data.content.sha;
+  }
 }
 
 function renderSources() {
   document.getElementById('sourcesList').innerHTML = sources.map(s => `
     <div class="source-row">
-      <span>${s.nombre || 'Sin nombre'}</span>
-      <input type="text" value="${s.url || ''}" readonly>
+      <span>${s.nombre||'Sin nombre'}</span>
+      <input type="text" value="${s.url||''}" readonly>
     </div>`).join('');
 }
 
@@ -105,60 +169,51 @@ function setStatus(msg, type) {
   el.style.color = type==='error'?'#c0392b':type==='ok'?'#3B6D11':'#888';
 }
 
+function esCerrado(taller, paquete) {
+  return cerrados.some(c => c.taller === taller && c.paquete === paquete);
+}
+
 function parseSheet(rows, sheetName) {
-  const taller = rows.length > 1 && rows[1] && rows[1][0] ? String(rows[1][0]).trim() : sheetName;
+  const taller = rows.length>1 && rows[1] && rows[1][0] ? String(rows[1][0]).trim() : sheetName;
   const paquete = rows[0] && rows[0][0] ? String(rows[0][0]).trim() : sheetName;
-
   let headerIdx = -1;
-  for (let i = 0; i < Math.min(12, rows.length); i++) {
-    if (rows[i].some(c => String(c).toUpperCase().includes('POSIC'))) { headerIdx = i; break; }
+  for (let i=0; i<Math.min(12,rows.length); i++) {
+    if (rows[i].some(c=>String(c).toUpperCase().includes('POSIC'))) { headerIdx=i; break; }
   }
-  if (headerIdx === -1) return null;
-
-  const headers = rows[headerIdx].map(c => String(c).toUpperCase().trim());
-  const iPos  = headers.findIndex(h => h.includes('POSIC'));
-  const iCant = headers.findIndex(h => h.includes('CANT'));
-  const iKgU  = headers.findIndex(h => h.includes('KG'));
-  const avIdxs = headers.map((h,i) => h.includes('AVANCE') ? i : -1).filter(i => i >= 0);
-  const iAvArm = avIdxs[0] ?? -1;
-  const iAvSol = avIdxs[1] ?? -1;
-  let iAPCal = headers.findIndex(h => h.includes('AP') && h.includes('CALIDAD'));
-  if (iAPCal === -1) {
-    let cnt = 0;
-    for (let i = 0; i < headers.length; i++) {
-      if (headers[i].includes('CALIDAD')) { cnt++; if (cnt===2) { iAPCal=i; break; } }
-    }
+  if (headerIdx===-1) return null;
+  const headers = rows[headerIdx].map(c=>String(c).toUpperCase().trim());
+  const iPos  = headers.findIndex(h=>h.includes('POSIC'));
+  const iCant = headers.findIndex(h=>h.includes('CANT'));
+  const iKgU  = headers.findIndex(h=>h.includes('KG'));
+  const avIdxs = headers.map((h,i)=>h.includes('AVANCE')?i:-1).filter(i=>i>=0);
+  const iAvArm = avIdxs[0]??-1;
+  const iAvSol = avIdxs[1]??-1;
+  let iAPCal = headers.findIndex(h=>h.includes('AP')&&h.includes('CALIDAD'));
+  if (iAPCal===-1) { let cnt=0; for(let i=0;i<headers.length;i++) { if(headers[i].includes('CALIDAD')){cnt++; if(cnt===2){iAPCal=i;break;}} } }
+  let totalCant=0,totalKg=0,totalFabKg=0,totalLibKg=0;
+  for (let i=headerIdx+1; i<rows.length; i++) {
+    const r=rows[i];
+    const pos=String(r[iPos]??'').trim(); if(!pos) continue;
+    const cant=parseFloat(r[iCant])||0; if(cant<=0) continue;
+    const kgU=iKgU>=0?parseFloat(r[iKgU])||0:0;
+    const avArm=iAvArm>=0?parseFloat(r[iAvArm])||0:0;
+    const avSol=iAvSol>=0?parseFloat(r[iAvSol])||0:0;
+    const apCal=iAPCal>=0?parseFloat(r[iAPCal])||0:0;
+    const kgTotal=cant*kgU;
+    const pctFab=Math.min((avArm/cant)*0.5+(avSol/cant)*0.5,1);
+    totalCant+=cant; totalKg+=kgTotal;
+    totalFabKg+=kgTotal*pctFab;
+    totalLibKg+=(Math.min(apCal,cant)/cant)*kgTotal;
   }
-
-  let totalCant=0, totalKg=0, totalFabKg=0, totalLibKg=0;
-  for (let i = headerIdx+1; i < rows.length; i++) {
-    const r = rows[i];
-    const pos = String(r[iPos]??'').trim();
-    if (!pos) continue;
-    const cant  = parseFloat(r[iCant])  || 0;
-    if (cant <= 0) continue;
-    const kgU   = iKgU  >= 0 ? parseFloat(r[iKgU])  || 0 : 0;
-    const avArm = iAvArm >= 0 ? parseFloat(r[iAvArm]) || 0 : 0;
-    const avSol = iAvSol >= 0 ? parseFloat(r[iAvSol]) || 0 : 0;
-    const apCal = iAPCal >= 0 ? parseFloat(r[iAPCal]) || 0 : 0;
-    const kgTotal = cant * kgU;
-    const pctFab  = Math.min((avArm/cant)*0.5 + (avSol/cant)*0.5, 1);
-    totalCant   += cant;
-    totalKg     += kgTotal;
-    totalFabKg  += kgTotal * pctFab;
-    totalLibKg  += (Math.min(apCal, cant) / cant) * kgTotal;
-  }
-
-  if (totalCant === 0) return null;
-  return { taller, paquete, totalCant, totalKg, totalFabKg, totalLibKg };
+  if (totalCant===0) return null;
+  return {taller,paquete,totalCant,totalKg,totalFabKg,totalLibKg};
 }
 
 function formatFecha(raw) {
   if (!raw) return null;
   if (/^\d{2}\/\d{2}\/\d{4}/.test(raw)) return raw;
   try {
-    const d = new Date(raw);
-    if (isNaN(d)) return raw;
+    const d=new Date(raw); if(isNaN(d)) return raw;
     return d.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+
            d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   } catch(e){ return raw; }
@@ -170,40 +225,26 @@ async function cargarTodo() {
   document.getElementById('tablaContainer').innerHTML = '<p class="empty">Cargando...</p>';
   document.getElementById('resumen').style.display = 'none';
   datosGlobales = [];
-
   const fetchConTimeout = url => Promise.race([
-    fetch(url).then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); }),
-    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), 15000))
+    fetch(url).then(r=>{if(!r.ok) throw new Error(`HTTP ${r.status}`); return r.json();}),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),15000))
   ]);
-
-  let errores = 0;
-  await Promise.all(sources.map(src =>
+  let errores=0;
+  await Promise.all(sources.map(src=>
     fetchConTimeout(src.url)
-      .then(sheets => {
+      .then(sheets=>{
         for (const sh of sheets) {
-          const parsed = parseSheet(sh.data, sh.name);
-          if (parsed) datosGlobales.push({
-            taller: parsed.taller,
-            paquete: parsed.paquete,
-            totalCant: parsed.totalCant,
-            totalKg: parsed.totalKg,
-            totalFabKg: parsed.totalFabKg,
-            totalLibKg: parsed.totalLibKg,
-            lastModified: formatFecha(sh.lastModified),
-            activo: true
-          });
+          const parsed=parseSheet(sh.data,sh.name);
+          if (parsed && !esCerrado(parsed.taller, parsed.paquete)) {
+            datosGlobales.push({...parsed, lastModified:formatFecha(sh.lastModified), activo:true});
+          }
         }
       })
-      .catch(() => errores++)
+      .catch(()=>errores++)
   ));
-
-  if (!datosGlobales.length) {
-    setStatus('No se pudieron cargar datos','error');
-    document.getElementById('tablaContainer').innerHTML = '<p class="empty">Sin datos. Verificá las URLs.</p>';
-    return;
-  }
   setStatus(`${datosGlobales.length} paquetes cargados${errores?' ('+errores+' fuente/s con error)':''}`, errores?'':'ok');
   renderTabla();
+  renderCerrados();
 }
 
 function toggleActivo(idx, val) {
@@ -211,38 +252,91 @@ function toggleActivo(idx, val) {
   renderTabla();
 }
 
-function renderTabla() {
-  const activos = datosGlobales.filter(d => d.activo);
-  let totCant=0, totKg=0, totFab=0, totLib=0;
-  for (const d of activos) {
-    totCant += d.totalCant;
-    totKg   += d.totalKg;
-    totFab  += d.totalFabKg;
-    totLib  += d.totalLibKg;
-  }
-  const pFabT = totKg>0 ? totFab/totKg*100 : 0;
-  const pLibT = totKg>0 ? totLib/totKg*100 : 0;
+function mostrarModalCerrar(idx) {
+  const d = datosGlobales[idx];
+  document.getElementById('modalContainer').innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <h3>Cerrar paquete</h3>
+        <p>¿Confirmás que querés cerrar el paquete<br><b>${d.paquete}</b><br>de <b>${d.taller}</b>?<br><br>Ya no aparecerá en la pantalla principal.</p>
+        <div class="modal-btns">
+          <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+          <button class="btn-confirmar" onclick="cerrarPaquete(${idx})">Cerrar paquete</button>
+        </div>
+      </div>
+    </div>`;
+}
 
-  document.getElementById('resumen').style.display = 'grid';
-  document.getElementById('resumen').innerHTML = `
+function cerrarModal() {
+  document.getElementById('modalContainer').innerHTML = '';
+}
+
+async function cerrarPaquete(idx) {
+  cerrarModal();
+  const d = datosGlobales[idx];
+  const fechaCierre = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  cerrados.push({
+    taller: d.taller,
+    paquete: d.paquete,
+    totalKg: d.totalKg,
+    pctFab: d.totalKg>0 ? (d.totalFabKg/d.totalKg*100).toFixed(1) : '0.0',
+    pctLib: d.totalKg>0 ? (d.totalLibKg/d.totalKg*100).toFixed(1) : '0.0',
+    fechaCierre
+  });
+  await guardarCerrados();
+  datosGlobales.splice(idx, 1);
+  renderTabla();
+  renderCerrados();
+}
+
+function mostrarModalReabrir(idx) {
+  const c = cerrados[idx];
+  document.getElementById('modalContainer').innerHTML = `
+    <div class="modal-overlay">
+      <div class="modal">
+        <h3>Reabrir paquete</h3>
+        <p>¿Confirmás que querés reabrir el paquete<br><b>${c.paquete}</b><br>de <b>${c.taller}</b>?<br><br>Volverá a aparecer en la pantalla principal.</p>
+        <div class="modal-btns">
+          <button class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
+          <button class="btn-confirmar" style="background:#27ae60" onclick="reabrirPaquete(${idx})">Reabrir paquete</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function reabrirPaquete(idx) {
+  cerrarModal();
+  cerrados.splice(idx, 1);
+  await guardarCerrados();
+  await cargarTodo();
+}
+
+function renderTabla() {
+  const activos = datosGlobales.filter(d=>d.activo);
+  let totCant=0,totKg=0,totFab=0,totLib=0;
+  for (const d of activos){totCant+=d.totalCant;totKg+=d.totalKg;totFab+=d.totalFabKg;totLib+=d.totalLibKg;}
+  const pFabT=totKg>0?totFab/totKg*100:0;
+  const pLibT=totKg>0?totLib/totKg*100:0;
+
+  document.getElementById('resumen').style.display='grid';
+  document.getElementById('resumen').innerHTML=`
     <div class="card"><div class="card-label">Paquetes activos</div><div class="card-value">${activos.length}</div></div>
     <div class="card"><div class="card-label">Total kg</div><div class="card-value">${Math.round(totKg).toLocaleString('es-AR')}</div><div class="card-sub">${Math.round(totCant)} piezas</div></div>
     <div class="card"><div class="card-label">Fabricado</div><div class="card-value">${pFabT.toFixed(1)}%</div><div class="card-sub">${Math.round(totFab).toLocaleString('es-AR')} kg</div></div>
     <div class="card"><div class="card-label">Liberado calidad</div><div class="card-value">${pLibT.toFixed(1)}%</div><div class="card-sub">${Math.round(totLib).toLocaleString('es-AR')} kg</div></div>`;
 
-  let rows = '';
-  for (let i = 0; i < datosGlobales.length; i++) {
-    const d = datosGlobales[i];
-    const pF = d.totalKg>0 ? d.totalFabKg/d.totalKg*100 : 0;
-    const pL = d.totalKg>0 ? d.totalLibKg/d.totalKg*100 : 0;
-    const bF = pF>=100?'b-ok':pF>0?'b-par':'b-no';
-    const bL = pL>=100?'b-ok':pL>0?'b-par':'b-no';
-    const pfF = pF>=100?'pf-ok':pF>0?'pf-par':'pf-no';
-    const pfL = pL>=100?'pf-ok':pL>0?'pf-par':'pf-no';
-    const kgStr = d.totalKg>0 ? Math.round(d.totalKg).toLocaleString('es-AR')+' kg' : '<span style="color:#ccc">—</span>';
-    const fechaHTML = d.lastModified ? `<span class="fecha-ok">${d.lastModified}</span>` : `<span class="fecha-vacia">—</span>`;
-    const rowClass = d.activo ? '' : 'row-inactiva';
-    rows += `<tr class="${rowClass}">
+  let rows='';
+  for (let i=0;i<datosGlobales.length;i++) {
+    const d=datosGlobales[i];
+    const pF=d.totalKg>0?d.totalFabKg/d.totalKg*100:0;
+    const pL=d.totalKg>0?d.totalLibKg/d.totalKg*100:0;
+    const bF=pF>=100?'b-ok':pF>0?'b-par':'b-no';
+    const bL=pL>=100?'b-ok':pL>0?'b-par':'b-no';
+    const pfF=pF>=100?'pf-ok':pF>0?'pf-par':'pf-no';
+    const pfL=pL>=100?'pf-ok':pL>0?'pf-par':'pf-no';
+    const kgStr=d.totalKg>0?Math.round(d.totalKg).toLocaleString('es-AR')+' kg':'<span style="color:#ccc">—</span>';
+    const fechaHTML=d.lastModified?`<span class="fecha-ok">${d.lastModified}</span>`:`<span class="fecha-vacia">—</span>`;
+    rows+=`<tr class="${d.activo?'':'row-inactiva'}">
       <td style="text-align:center"><input type="checkbox" ${d.activo?'checked':''} onchange="toggleActivo(${i},this.checked)" style="cursor:pointer;width:15px;height:15px"></td>
       <td style="font-weight:500">${d.taller}</td>
       <td>${d.paquete}</td>
@@ -263,25 +357,59 @@ function renderTabla() {
         <div style="font-size:11px;color:#aaa;margin-top:2px">${Math.round(d.totalLibKg).toLocaleString('es-AR')} kg</div>
       </td>
       <td>${fechaHTML}</td>
+      <td><button class="btn-cerrar" onclick="mostrarModalCerrar(${i})">Cerrar</button></td>
     </tr>`;
   }
 
-  document.getElementById('tablaContainer').innerHTML = `
+  document.getElementById('tablaContainer').innerHTML=`
     <table>
       <thead><tr>
-        <th style="width:4%"></th>
-        <th style="width:10%">Taller</th>
-        <th style="width:20%">Paquete</th>
+        <th style="width:3%"></th>
+        <th style="width:9%">Taller</th>
+        <th style="width:19%">Paquete</th>
         <th style="width:6%;text-align:center">Piezas</th>
         <th style="width:9%;text-align:right">Kg total</th>
-        <th style="width:21%">Fabricado</th>
-        <th style="width:21%">Liberado</th>
+        <th style="width:20%">Fabricado</th>
+        <th style="width:20%">Liberado</th>
         <th style="width:9%">Actualizado</th>
+        <th style="width:5%"></th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
-setInterval(cargarTodo, 5 * 60 * 1000);
+
+function renderCerrados() {
+  const sec = document.getElementById('sec-cerrados');
+  if (cerrados.length===0) { sec.style.display='none'; return; }
+  sec.style.display='block';
+  let rows='';
+  for (let i=0;i<cerrados.length;i++) {
+    const c=cerrados[i];
+    rows+=`<tr>
+      <td style="font-weight:500">${c.taller}</td>
+      <td>${c.paquete}</td>
+      <td style="text-align:right">${c.totalKg?Math.round(c.totalKg).toLocaleString('es-AR')+' kg':'—'}</td>
+      <td><span class="badge b-cerrado">${c.pctFab}% fab.</span></td>
+      <td><span class="badge b-cerrado">${c.pctLib}% lib.</span></td>
+      <td>${c.fechaCierre||'—'}</td>
+      <td><button class="btn-reabrir" onclick="mostrarModalReabrir(${i})">Reabrir</button></td>
+    </tr>`;
+  }
+  document.getElementById('tablaCerrados').innerHTML=`
+    <table>
+      <thead><tr>
+        <th style="width:12%">Taller</th>
+        <th style="width:30%">Paquete</th>
+        <th style="width:12%;text-align:right">Kg total</th>
+        <th style="width:13%">Fabricado</th>
+        <th style="width:13%">Liberado</th>
+        <th style="width:13%">Fecha cierre</th>
+        <th style="width:7%"></th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
 init();
 </script>
 </body>
