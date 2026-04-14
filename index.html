@@ -96,9 +96,7 @@ tr:hover td{background:#fafaf8}
 <div id="modalContainer"></div>
 
 <script>
-const GITHUB_TOKEN = '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';
-const GITHUB_REPO = 'cimotalleresext/dashboard-cimomet-';
-const CERRADOS_FILE = 'cerrados.json';
+const WORKER_URL = 'https://cimomet-cerrados.ppccimo.workers.dev';
 
 let sources = [];
 let datosGlobales = [];
@@ -118,39 +116,24 @@ async function init() {
 
 async function cargarCerrados() {
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}?t=${Date.now()}`, {
-      headers: { 
-        'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
+    const res = await fetch(WORKER_URL);
     if (res.ok) {
       const data = await res.json();
-      cerradosSHA = data.sha;
-      cerrados = JSON.parse(atob(data.content.replace(/\n/g,'')));
-    } else if (res.status === 404) {
-      cerrados = [];
-      cerradosSHA = null;
+      cerrados = data.data || [];
+      cerradosSHA = data.sha || null;
     }
   } catch(e) { cerrados = []; }
 }
 
 async function guardarCerrados() {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(cerrados, null, 2))));
-  const body = { message: 'Actualizar cerrados.json', content };
-  if (cerradosSHA) body.sha = cerradosSHA;
-  const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
-    method: 'PUT',
-    headers: {
-      'Authorization': `token ${GITHUB_TOKEN}`,
-      'Accept': 'application/vnd.github.v3+json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
+  const res = await fetch(WORKER_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: cerrados, sha: cerradosSHA })
   });
   if (res.ok) {
-    const data = await res.json();
-    cerradosSHA = data.content.sha;
+    const result = await res.json();
+    cerradosSHA = result.sha || cerradosSHA;
   }
 }
 
