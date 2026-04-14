@@ -118,11 +118,10 @@ async function init() {
 
 async function cargarCerrados() {
   try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}?t=${Date.now()}`, {
       headers: { 
         'Authorization': `token ${GITHUB_TOKEN}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Cache-Control': 'no-cache'
+        'Accept': 'application/vnd.github.v3+json'
       }
     });
     if (res.ok) {
