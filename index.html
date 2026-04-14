@@ -118,20 +118,22 @@ async function init() {
 
 async function cargarCerrados() {
   try {
-    const res = await fetch('cerrados.json?t=' + Date.now());
+    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
+      headers: { 
+        'Authorization': `token ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Cache-Control': 'no-cache'
+      }
+    });
     if (res.ok) {
-      cerrados = await res.json();
-    } else {
+      const data = await res.json();
+      cerradosSHA = data.sha;
+      cerrados = JSON.parse(atob(data.content.replace(/\n/g,'')));
+    } else if (res.status === 404) {
       cerrados = [];
+      cerradosSHA = null;
     }
   } catch(e) { cerrados = []; }
-  // Obtener SHA para poder escribir después
-  try {
-    const res = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${CERRADOS_FILE}`, {
-      headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Accept': 'application/vnd.github.v3+json' }
-    });
-    if (res.ok) { const data = await res.json(); cerradosSHA = data.sha; }
-  } catch(e) {}
 }
 
 async function guardarCerrados() {
