@@ -38,5 +38,13 @@
     "pctFab": "7.6",
     "pctLib": "7.6",
     "fechaCierre": "04/05/2026"
+  },
+  {
+    "taller": "GREGORIS",
+    "paquete": "OT 543 - OT 29 (LC 36) GREGORIS",
+    "totalKg": 1397,
+    "pctFab": "100.0",
+    "pctLib": "100.0",
+    "fechaCierre": "04/05/2026"
   }
 ]
