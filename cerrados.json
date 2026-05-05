@@ -46,5 +46,13 @@
     "pctFab": "100.0",
     "pctLib": "100.0",
     "fechaCierre": "04/05/2026"
+  },
+  {
+    "taller": "RIOS",
+    "paquete": "OT 543 - OT 14C (LC 34) RIOS",
+    "totalKg": 5088.1,
+    "pctFab": "100.0",
+    "pctLib": "100.0",
+    "fechaCierre": "05/05/2026"
   }
 ]
