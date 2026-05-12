@@ -54,5 +54,13 @@
     "pctFab": "100.0",
     "pctLib": "100.0",
     "fechaCierre": "05/05/2026"
+  },
+  {
+    "taller": "GREGORIS",
+    "paquete": "OT 550 - SUBCONJUNTOS GREGORIS 3ra TANDA",
+    "totalKg": 13600,
+    "pctFab": "100.0",
+    "pctLib": "100.0",
+    "fechaCierre": "12/05/2026"
   }
 ]
