@@ -70,5 +70,13 @@
     "pctFab": "100.0",
     "pctLib": "100.0",
     "fechaCierre": "15/05/2026"
+  },
+  {
+    "taller": "CECCHINI",
+    "paquete": "OT 546 -  CECCHINI",
+    "totalKg": 11778,
+    "pctFab": "100.0",
+    "pctLib": "100.0",
+    "fechaCierre": "15/05/2026"
   }
 ]
