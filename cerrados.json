@@ -62,5 +62,13 @@
     "pctFab": "100.0",
     "pctLib": "100.0",
     "fechaCierre": "12/05/2026"
+  },
+  {
+    "taller": "HANUSIAK",
+    "paquete": "OT 550 - SUBCONJUNTOS HANUSIAK",
+    "totalKg": 4966,
+    "pctFab": "100.0",
+    "pctLib": "100.0",
+    "fechaCierre": "15/05/2026"
   }
 ]
